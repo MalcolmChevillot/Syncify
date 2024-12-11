@@ -1,28 +1,75 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  Image,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Header from "@/components/Header";
-
 import { NavigationProp } from "@react-navigation/native";
+
+const syncListsMock = [
+  { id: 1, name: "Workout Playlist", friend: "John Doe" },
+  { id: 2, name: "Chill Vibes", friend: "Jane Smith" },
+  { id: 3, name: "Chill Vibes", friend: "Jane Smith" },
+  { id: 4, name: "Chill Vibes", friend: "Jane Smith" },
+  { id: 5, name: "Chill Vibes", friend: "Jane Smith" },
+  { id: 6, name: "Chill Vibes", friend: "Jane Smith" },
+];
 
 const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const navigateToLogin = () => {
     navigation.navigate("Login");
   };
 
+  const handleAddSyncList = () => {
+    console.log("Ajout d'une nouvelle SyncList");
+  };
+
+  const hasSyncLists = syncListsMock.length > 0;
+
   return (
     <LinearGradient colors={["#020024", "#090979"]} style={styles.container}>
       <Header onLoginPress={navigateToLogin} />
 
-      <View style={styles.centerContent}>
-        <Text style={styles.title}>Vous n’avez pas encore de SyncList 😢</Text>
-
-        <TouchableOpacity style={styles.createButton}>
-          <Text style={styles.createButtonText}>
-            Créer une SyncList avec un ami
-          </Text>
+      <View style={styles.syncListHeader}>
+        <Text style={styles.syncListTitle}>Vos SyncLists</Text>
+        <TouchableOpacity style={styles.addButton} onPress={handleAddSyncList}>
+          <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
       </View>
+
+      {hasSyncLists ? (
+        <FlatList
+          data={syncListsMock}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.syncListContainer}>
+              <TouchableOpacity style={styles.syncListImage}></TouchableOpacity>
+              <View style={styles.syncListInfo}>
+                <Text style={styles.syncListName}>{item.name}</Text>
+                <Text style={styles.syncListFriend}>Avec : {item.friend}</Text>
+              </View>
+            </View>
+          )}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={styles.centerContent}>
+          <Text style={styles.title}>
+            Vous n’avez pas encore de SyncList 😢
+          </Text>
+
+          <TouchableOpacity style={styles.createButton}>
+            <Text style={styles.createButtonText}>
+              Créer une SyncList avec un ami
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.bottomContent}>
         <View style={styles.recommendation}>
@@ -83,9 +130,66 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  syncListHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  syncListTitle: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  addButton: {
+    backgroundColor: "#00FF88",
+    borderRadius: 20,
+    width: 25,
+    height: 25,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addButtonText: {
+    color: "#000000",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  syncListContainer: {
+    flexDirection: "row",
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 15,
+  },
+  syncListInfo: {
+    flexDirection: "column",
+    justifyContent: "center",
+  },
+  syncListImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 15,
+    backgroundColor: "#ffff",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  syncListName: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 5,
+    fontFamily: "Montserrat",
+  },
+  syncListFriend: {
+    color: "#B0B0B0",
+    fontSize: 14,
+  },
   recommendation: {
     borderRadius: 12,
-    padding: 20,
+    paddingBottom: 20,
+    paddingTop: 10,
   },
   recommendationTitle: {
     color: "#FFFFFF",
@@ -134,7 +238,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   spotifyButtonText: {
-    color: "#00000",
+    color: "#000000",
     fontSize: 10,
     fontWeight: "600",
   },
