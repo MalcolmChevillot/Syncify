@@ -5,7 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  Image,
+  Modal,
+  TextInput,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Header from "@/components/Header";
@@ -21,12 +22,24 @@ const syncListsMock = [
 ];
 
 const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
+  const [modalVisible, setModalVisible] = React.useState(false);
+  const [newSyncListName, setNewSyncListName] = React.useState("");
+  const [friendName, setFriendName] = React.useState("");
+
   const navigateToLogin = () => {
     navigation.navigate("Login");
   };
 
   const handleAddSyncList = () => {
-    console.log("Ajout d'une nouvelle SyncList");
+    setModalVisible(true);
+  };
+
+  const handleSaveSyncList = () => {
+    if (newSyncListName.trim() !== "") {
+      syncListsMock.push({ id: Date.now(), name: newSyncListName, friend: "" });
+      setNewSyncListName("");
+      setModalVisible(false);
+    }
   };
 
   const hasSyncLists = syncListsMock.length > 0;
@@ -91,6 +104,50 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
           </View>
         </View>
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <LinearGradient
+            colors={["#020024", "#090979"]}
+            style={styles.modalContent}
+          >
+            <Text style={styles.modalTitle}>Ajouter une SyncList</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nom de la SyncList"
+              placeholderTextColor="#888"
+              value={newSyncListName}
+              onChangeText={setNewSyncListName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Nom de votre ami"
+              placeholderTextColor="#888"
+              value={friendName}
+              onChangeText={setFriendName}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonSave}
+                onPress={handleSaveSyncList}
+              >
+                <Text style={styles.modalButtonText}>Enregistrer</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 };
@@ -240,6 +297,59 @@ const styles = StyleSheet.create({
   spotifyButtonText: {
     color: "#000000",
     fontSize: 10,
+    fontWeight: "600",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+  },
+  modalContent: {
+    width: "80%",
+    height: "50%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "600",
+    marginBottom: 40,
+    color: "#ffff",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#DDD",
+    borderRadius: 8,
+    padding: 10,
+    width: "100%",
+    marginBottom: 40,
+    color: "#000",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButtonCancel: {
+    backgroundColor: "#FF6666",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  modalButtonSave: {
+    backgroundColor: "#00FF88",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  modalButtonText: {
+    color: "#000",
+    fontSize: 16,
     fontWeight: "600",
   },
 });
