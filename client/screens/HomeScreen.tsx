@@ -35,8 +35,12 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
   };
 
   const handleSaveSyncList = () => {
-    if (newSyncListName.trim() !== "") {
-      syncListsMock.push({ id: Date.now(), name: newSyncListName, friend: "" });
+    if (newSyncListName.trim() !== "" && friendName.trim() !== "") {
+      syncListsMock.push({
+        id: Date.now(),
+        name: newSyncListName,
+        friend: friendName,
+      });
       setNewSyncListName("");
       setModalVisible(false);
     }
@@ -116,6 +120,12 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
             colors={["#020024", "#090979"]}
             style={styles.modalContent}
           >
+            <TouchableOpacity
+              style={styles.modalButtonCancel}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.cancelButtonText}>x</Text>
+            </TouchableOpacity>
             <Text style={styles.modalTitle}>Ajouter une SyncList</Text>
             <TextInput
               style={styles.input}
@@ -132,12 +142,6 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
               onChangeText={setFriendName}
             />
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalButtonCancel}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.modalButtonText}>Annuler</Text>
-              </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalButtonSave}
                 onPress={handleSaveSyncList}
@@ -320,6 +324,11 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     color: "#ffff",
   },
+  cancelButtonText: {
+    color: "#ffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   input: {
     borderWidth: 1,
     borderColor: "#DDD",
@@ -327,19 +336,21 @@ const styles = StyleSheet.create({
     padding: 10,
     width: "100%",
     marginBottom: 40,
-    color: "#000",
+    color: "#ffff",
   },
   modalButtons: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     width: "100%",
   },
   modalButtonCancel: {
-    backgroundColor: "#FF6666",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
     marginRight: 10,
+    position: "absolute",
+    top: 5,
+    right: 0,
   },
   modalButtonSave: {
     backgroundColor: "#00FF88",
