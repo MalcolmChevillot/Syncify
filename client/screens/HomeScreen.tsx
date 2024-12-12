@@ -30,6 +30,10 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
     navigation.navigate("Login");
   };
 
+  const navigateToSyncList = () => {
+    navigation.navigate("SyncList");
+  };
+
   const handleAddSyncList = () => {
     setModalVisible(true);
   };
@@ -65,7 +69,10 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={styles.syncListContainer}>
-              <TouchableOpacity style={styles.syncListImage}></TouchableOpacity>
+              <TouchableOpacity
+                style={styles.syncListImage}
+                onPress={navigateToSyncList}
+              ></TouchableOpacity>
               <View style={styles.syncListInfo}>
                 <Text style={styles.syncListName}>{item.name}</Text>
                 <Text style={styles.syncListFriend}>Avec : {item.friend}</Text>
