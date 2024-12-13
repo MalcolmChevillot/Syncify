@@ -30,12 +30,7 @@ const tracksMock = [
   // ...
 ];
 
-import { RouteProp } from "@react-navigation/native";
-
-type SyncListScreenRouteProp = RouteProp<{ params: { id: number } }, "params">;
-
-const SyncListScreen = ({ route }: { route: SyncListScreenRouteProp }) => {
-  const { id } = route.params || {};
+const SyncListScreen = () => {
   const navigation = useNavigation();
 
   const handleBackPress = () => {

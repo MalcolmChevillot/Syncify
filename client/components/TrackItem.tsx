@@ -1,14 +1,14 @@
-// Composant séparé
 import React, { useEffect, useRef } from "react";
 import { Animated, Text, View, StyleSheet } from "react-native";
 
 interface Track {
   title: string;
+  artist: string;
   addedBy: string;
   status: string;
 }
 
-const TrackItem: React.FC<{ track: Track }> = ({ track }) => {
+const TrackItem = ({ track }: { track: Track }) => {
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -16,12 +16,12 @@ const TrackItem: React.FC<{ track: Track }> = ({ track }) => {
       Animated.loop(
         Animated.sequence([
           Animated.timing(shakeAnim, {
-            toValue: 2,
+            toValue: 1,
             duration: 50,
             useNativeDriver: true,
           }),
           Animated.timing(shakeAnim, {
-            toValue: -2,
+            toValue: -1,
             duration: 50,
             useNativeDriver: true,
           }),
@@ -30,19 +30,23 @@ const TrackItem: React.FC<{ track: Track }> = ({ track }) => {
             duration: 50,
             useNativeDriver: true,
           }),
-          // Delay de 2 secondes avant de recommencer
           Animated.delay(2000),
         ])
       ).start();
     }
   }, [track.status]);
 
+  const rotate = shakeAnim.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ["-1deg", "1deg"],
+  });
+
   return (
     <Animated.View
       style={[
         styles.trackContainer,
         track.status === "Pas encore écouté" && {
-          transform: [{ translateX: shakeAnim }],
+          transform: [{ rotate: rotate }],
         },
       ]}
     >
@@ -50,6 +54,7 @@ const TrackItem: React.FC<{ track: Track }> = ({ track }) => {
         <View style={styles.albumCover} />
         <View>
           <Text style={styles.trackTitle}>{track.title}</Text>
+          <Text style={styles.trackArtist}>{track.artist}</Text>
         </View>
       </View>
       <View>
@@ -71,6 +76,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 10,
     marginBottom: 10,
+    marginTop: 5,
   },
   trackInfo: {
     flexDirection: "row",
