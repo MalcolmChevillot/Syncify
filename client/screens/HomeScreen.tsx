@@ -26,8 +26,8 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const [newSyncListName, setNewSyncListName] = React.useState("");
   const [friendName, setFriendName] = React.useState("");
 
-  const navigateToLogin = () => {
-    navigation.navigate("Login");
+  const navigateToSyncList = (syncListId: number) => {
+    navigation.navigate("SyncList", { id: syncListId });
   };
 
   const handleAddSyncList = () => {
@@ -50,8 +50,6 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
 
   return (
     <LinearGradient colors={["#020024", "#090979"]} style={styles.container}>
-      <Header onLoginPress={navigateToLogin} />
-
       <View style={styles.syncListHeader}>
         <Text style={styles.syncListTitle}>Vos SyncLists</Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddSyncList}>
@@ -64,13 +62,16 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
           data={syncListsMock}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.syncListContainer}>
+            <TouchableOpacity
+              style={styles.syncListContainer}
+              onPress={() => navigateToSyncList(item.id)}
+            >
               <TouchableOpacity style={styles.syncListImage}></TouchableOpacity>
               <View style={styles.syncListInfo}>
                 <Text style={styles.syncListName}>{item.name}</Text>
                 <Text style={styles.syncListFriend}>Avec : {item.friend}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           )}
           showsVerticalScrollIndicator={false}
         />

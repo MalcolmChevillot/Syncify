@@ -1,11 +1,13 @@
 import React from "react";
 import { View, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
-interface HeaderProps {
-  onLoginPress: () => void;
-}
+const Header = () => {
+  const navigation = useNavigation();
 
-const Header: React.FC<HeaderProps> = ({ onLoginPress }) => {
+  const onLoginPress = () => {
+    navigation.navigate("Login" as never);
+  };
   return (
     <View style={styles.header}>
       <TouchableOpacity
@@ -27,11 +29,13 @@ const Header: React.FC<HeaderProps> = ({ onLoginPress }) => {
 
 const styles = StyleSheet.create({
   header: {
+    backgroundColor: "#020024",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 10,
-    paddingBottom: 30,
+    marginTop: 40,
+    paddingVertical: 5,
+    paddingHorizontal: 20,
   },
   circle: {
     width: 40,
