@@ -8,6 +8,11 @@ const Header = () => {
   const onLoginPress = () => {
     navigation.navigate("Login" as never);
   };
+
+  const onFriendsPress = () => {
+    navigation.navigate("Friends" as never);
+  };
+
   return (
     <View style={styles.header}>
       <TouchableOpacity
@@ -17,7 +22,7 @@ const Header = () => {
 
       <Image source={require("@/assets/images/logo.png")} style={styles.logo} />
 
-      <TouchableOpacity>
+      <TouchableOpacity onPress={onFriendsPress}>
         <Image
           source={require("@/assets/images/friends-icon.png")}
           style={styles.icon}

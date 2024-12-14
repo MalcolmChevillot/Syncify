@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import HomeScreen from "@/screens/HomeScreen";
 import LoginScreen from "@/screens/LoginScreen";
 import SyncListScreen from "@/screens/SyncListScreen";
+import FriendsScreen from "@/screens/FriendsScreen";
 
 const Stack = createStackNavigator();
 
@@ -54,6 +55,7 @@ const Layout = () => {
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="SyncList" component={SyncListScreen} />
+            <Stack.Screen name="Friends" component={FriendsScreen} />
           </Stack.Navigator>
         </View>
       </NavigationContainer>
