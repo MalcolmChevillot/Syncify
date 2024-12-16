@@ -31,7 +31,6 @@ const LoginScreen = () => {
   );
 
   useEffect(() => {
-    console.log(request);
     if (response?.type === "success") {
       const { code } = response.params;
       fetch("http://192.168.0.44:3000/auth/exchange", {
