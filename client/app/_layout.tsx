@@ -42,8 +42,10 @@ const Layout = () => {
       const token = await SecureStore.getItem("token");
       if (token) {
         setIsAuthenticated(true);
+        setCurrentRouteName("Home");
       } else {
         setIsAuthenticated(false);
+        setCurrentRouteName("Login");
       }
     };
 
