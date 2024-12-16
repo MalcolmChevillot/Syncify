@@ -5,20 +5,13 @@ import { useNavigation } from "@react-navigation/native";
 const Header = () => {
   const navigation = useNavigation();
 
-  const onLoginPress = () => {
-    navigation.navigate("Login" as never);
-  };
-
   const onFriendsPress = () => {
     navigation.navigate("Friends" as never);
   };
 
   return (
     <View style={styles.header}>
-      <TouchableOpacity
-        onPress={onLoginPress}
-        style={styles.circle}
-      ></TouchableOpacity>
+      <TouchableOpacity style={styles.circle}></TouchableOpacity>
 
       <Image source={require("@/assets/images/logo.png")} style={styles.logo} />
 
