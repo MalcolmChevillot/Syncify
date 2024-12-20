@@ -31,7 +31,6 @@ const Header = () => {
       });
       const data = await response.json();
       setProfilePic(data.user.profilePic);
-      console.log(data.user.profilePic);
     };
 
     getMe();
