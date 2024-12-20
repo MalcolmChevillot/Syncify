@@ -38,10 +38,18 @@ export const exchangeCode: RequestHandler = async (
           profilePic: spotifyUser.profilePic,
         },
       });
+    } else {
+      user = await prisma.user.update({
+        where: { spotifyId: user.spotifyId },
+        data: {
+          displayName: spotifyUser.display_name || undefined,
+          profilePic: spotifyUser.profilePic,
+        },
+      });
     }
 
     const token = jwt.sign({ spotifyId: user.spotifyId }, config.jwtSecret, {
-      expiresIn: "1h",
+      expiresIn: "7d",
     });
 
     // Tu peux aussi stocker le refresh_token en DB si besoin
@@ -54,5 +62,37 @@ export const exchangeCode: RequestHandler = async (
   } catch (error) {
     console.error(error);
     res.status(500).send("Erreur lors de l'échange du code Spotify");
+  }
+};
+
+export const getMe: RequestHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    res.status(401).send("Missing authorization header");
+    return;
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+
+  try {
+    const decoded = jwt.verify(token, config.jwtSecret) as {
+      spotifyId: string;
+    };
+    const user = await prisma.user.findUnique({
+      where: { spotifyId: decoded.spotifyId },
+    });
+
+    if (!user) {
+      res.status(404).send("User not found");
+      return;
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error(error);
+    res.status(401).send("Invalid token");
   }
 };

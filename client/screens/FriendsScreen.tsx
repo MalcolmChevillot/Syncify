@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
+import * as SecureStore from "expo-secure-store";
+import * as Clipboard from "expo-clipboard";
+import { Snackbar } from "react-native-paper";
 
 const friendsData = [
   { id: "1", name: "Gandhi", points: 130 },
@@ -17,9 +20,49 @@ const friendsData = [
 
 const FriendsScreen = () => {
   const navigation = useNavigation();
+  const [spotifyId, setSpotifyId] = useState<string | null>(null);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = await SecureStore.getItemAsync("token");
+      if (!token) return;
+
+      try {
+        const response = await fetch("http://192.168.0.44:3000/auth/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          console.error("Failed to fetch user data");
+          return;
+        }
+        const data = await response.json();
+        if (data.user && data.user.spotifyId) {
+          setSpotifyId(data.user.spotifyId);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const handleBackPress = () => {
     navigation.goBack();
+  };
+
+  const handleCopyId = async () => {
+    if (spotifyId) {
+      await Clipboard.setStringAsync(spotifyId);
+      setSnackbarVisible(true);
+    }
+  };
+
+  const onDismissSnackBar = () => {
+    setSnackbarVisible(false);
   };
 
   const renderFriendItem = ({
@@ -36,6 +79,18 @@ const FriendsScreen = () => {
 
   return (
     <LinearGradient colors={["#020024", "#090979"]} style={styles.container}>
+      {spotifyId && (
+        <View style={styles.spotifyIdContainer}>
+          <Text style={styles.spotifyIdText}>Mon Spotify ID: {spotifyId}</Text>
+          <TouchableOpacity onPress={handleCopyId}>
+            <Image
+              source={require("@/assets/images/copy.png")}
+              style={styles.copyIcon}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={styles.header}>
         <View style={styles.backTitle}>
           <TouchableOpacity onPress={handleBackPress}>
@@ -64,6 +119,20 @@ const FriendsScreen = () => {
           showsHorizontalScrollIndicator={false}
         />
       </View>
+
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={onDismissSnackBar}
+        duration={2000}
+        action={{
+          label: "OK",
+          onPress: () => {
+            // L’utilisateur ferme manuellement le snackbar, optionnel
+          },
+        }}
+      >
+        ID copié dans le presse-papiers !
+      </Snackbar>
     </LinearGradient>
   );
 };
@@ -73,6 +142,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 40,
+  },
+  spotifyIdContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  spotifyIdText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    marginBottom: 10,
   },
   header: {
     flexDirection: "row",
@@ -84,42 +163,27 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
   },
-  leftIcon: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  circleIcon: {
-    width: 20,
-    height: 20,
-    backgroundColor: "#000000",
-    borderRadius: 10,
-  },
   backImage: {
     width: 30,
     height: 30,
-  },
-  logo: {
-    width: 80,
-    height: 40,
-  },
-  rightIcon: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconImage: {
-    width: 25,
-    height: 30,
-    tintColor: "#FFFFFF",
   },
   title: {
     color: "#FFFFFF",
     fontSize: 24,
     fontWeight: "600",
     paddingLeft: 10,
+  },
+  iconImage: {
+    width: 25,
+    height: 30,
+    tintColor: "#FFFFFF",
+  },
+  copyIcon: {
+    width: 25,
+    height: 20,
+    tintColor: "#FFFFFF",
+    marginLeft: 5,
+    marginBottom: 10,
   },
   friendsContainer: {
     flex: 1,

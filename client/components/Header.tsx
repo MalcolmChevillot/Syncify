@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Image, TouchableOpacity, StyleSheet, Text } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
@@ -6,6 +6,7 @@ import * as SecureStore from "expo-secure-store";
 const Header = () => {
   const navigation = useNavigation();
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [profilePic, setProfilePic] = useState<string | null>(null);
 
   const onFriendsPress = () => {
     navigation.navigate("Friends" as never);
@@ -20,6 +21,21 @@ const Header = () => {
     setIsDropdownVisible((prev) => !prev);
   };
 
+  useEffect(() => {
+    const getMe = async () => {
+      const token = await SecureStore.getItemAsync("token");
+      const response = await fetch("http://192.168.0.44:3000/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      setProfilePic(data.user.profilePic);
+    };
+
+    getMe();
+  }, []);
+
   return (
     <View style={styles.header}>
       <View style={styles.leftSection}>
@@ -27,7 +43,9 @@ const Header = () => {
           onPress={toggleDropdown}
           style={styles.logoutContainer}
         >
-          <View style={styles.circle}></View>
+          {profilePic && (
+            <Image source={{ uri: profilePic }} style={styles.circle}></Image>
+          )}
           <Image
             source={require("@/assets/images/arrow-down.png")}
             style={styles.arrow_down}
@@ -80,7 +98,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
   },
