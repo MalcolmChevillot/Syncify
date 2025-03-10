@@ -39,11 +39,14 @@ const FriendsScreen = () => {
       if (!token) return;
 
       try {
-        const response = await fetch("http://192.168.0.44:3000/auth/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/auth/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (!response.ok) {
           console.error("Failed to fetch user data");
           return;
@@ -100,11 +103,14 @@ const FriendsScreen = () => {
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
 
-    const response = await fetch(`http://192.168.0.44:3000/user/${query}`, {
-      headers: {
-        Authorization: `Bearer ${await SecureStore.getItemAsync("token")}`,
-      },
-    });
+    const response = await fetch(
+      `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/user/${query}`,
+      {
+        headers: {
+          Authorization: `Bearer ${await SecureStore.getItemAsync("token")}`,
+        },
+      }
+    );
     if (!response.ok) {
       console.error("Failed to fetch search results");
       return;

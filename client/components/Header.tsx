@@ -24,11 +24,14 @@ const Header = () => {
   useEffect(() => {
     const getMe = async () => {
       const token = await SecureStore.getItemAsync("token");
-      const response = await fetch("http://192.168.0.44:3000/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const data = await response.json();
       setProfilePic(data.user.profilePic);
     };

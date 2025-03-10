@@ -33,7 +33,7 @@ const LoginScreen = () => {
   useEffect(() => {
     if (response?.type === "success") {
       const { code } = response.params;
-      fetch("http://192.168.0.44:3000/auth/exchange", {
+      fetch(`${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/auth/exchange`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
