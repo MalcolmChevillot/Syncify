@@ -4,48 +4,62 @@ import { prisma } from "../utils/prisma";
 export const addFriend: RequestHandler = async (
   req: Request,
   res: Response
-) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    res.status(401).send("Unauthorized");
-    return;
-  }
+): Promise<void> => {
+  try {
+    // Récupération de l'ID de l'utilisateur authentifié depuis le middleware
+    const authUserId = req.user?.id;
+    if (!authUserId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
 
-  const { userId } = req.body;
-  const { friendId } = req.body;
+    // Récupération du friendId depuis les paramètres de la route
+    const friendId = parseInt(req.params.friendId, 10);
+    if (!friendId) {
+      res.status(400).json({ error: "Missing friendId" });
+      return;
+    }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
+    // Vérification que l'utilisateur ne tente pas de s'ajouter lui-même
+    if (authUserId === friendId) {
+      res.status(400).json({ error: "Cannot add yourself as a friend" });
+      return;
+    }
 
-  if (!user) {
-    res.status(404).send("User not found");
-    return;
-  }
+    // Vérifier l'existence de l'ami dans la DB
+    const friend = await prisma.user.findUnique({ where: { id: friendId } });
+    if (!friend) {
+      res.status(404).json({ error: "Friend not found" });
+      return;
+    }
 
-  const friend = await prisma.user.findUnique({
-    where: { id: friendId },
-  });
-
-  if (!friend) {
-    res.status(404).send("Friend not found");
-    return;
-  }
-
-  const friendship = await prisma.friend.create({
-    data: {
-      user: {
-        connect: {
-          spotifyId: userId,
+    // Vérifier si la relation existe déjà pour éviter les doublons
+    const existingFriendship = await prisma.friend.findUnique({
+      where: {
+        userId_friendId: {
+          userId: authUserId,
+          friendId: friendId,
         },
       },
-      friend: {
-        connect: {
-          spotifyId: friendId,
-        },
-      },
-    },
-  });
+    });
+    if (existingFriendship) {
+      res.status(400).json({ error: "Friendship already exists" });
+      return;
+    }
 
-  res.json(friendship);
+    // Créer la relation d'amitié
+    const friendship = await prisma.friend.create({
+      data: {
+        user: { connect: { id: authUserId } },
+        friend: { connect: { id: friendId } },
+        status: "accepted",
+      },
+    });
+    res.json(friendship);
+    return;
+  } catch (error) {
+    console.error("Error adding friend:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+    return;
+  }
 };

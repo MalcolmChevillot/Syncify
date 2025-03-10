@@ -13,9 +13,9 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
-import * as SecureStore from "expo-secure-store";
 import * as Clipboard from "expo-clipboard";
 import { Snackbar } from "react-native-paper";
+import { useAuth } from "@/contexts/AuthContext"; // Assurez-vous du chemin
 
 const friendsData = [
   { id: "1", name: "Gandhi", points: 130 },
@@ -24,60 +24,26 @@ const friendsData = [
 
 const FriendsScreen = () => {
   const navigation = useNavigation();
-  const [spotifyId, setSpotifyId] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const { user, token } = useAuth();
 
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<
     Array<{ id: string; name: string; profilePic: string }>
   >([]);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = await SecureStore.getItemAsync("token");
-      if (!token) return;
-
-      try {
-        const response = await fetch(
-          `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/auth/me`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (!response.ok) {
-          console.error("Failed to fetch user data");
-          return;
-        }
-        const data = await response.json();
-        if (data.user && data.user.spotifyId && data.user.id) {
-          setUserId(data.user.id);
-          setSpotifyId(data.user.spotifyId);
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
   const addFriend = async (id: string) => {
-    const token = await SecureStore.getItemAsync("token");
-    if (!token) return;
+    if (!token || !user) return;
 
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/friend/add`,
+        `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/friend/add/${id}`,
         {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ userId: userId, friendId: id }),
         }
       );
       console.log("response", response);
@@ -97,8 +63,8 @@ const FriendsScreen = () => {
   };
 
   const handleCopyId = async () => {
-    if (spotifyId) {
-      await Clipboard.setStringAsync(spotifyId);
+    if (user?.spotifyId) {
+      await Clipboard.setStringAsync(user.spotifyId);
       setSnackbarVisible(true);
     }
   };
@@ -131,12 +97,11 @@ const FriendsScreen = () => {
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-
     const response = await fetch(
       `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/user/${query}`,
       {
         headers: {
-          Authorization: `Bearer ${await SecureStore.getItemAsync("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -165,7 +130,7 @@ const FriendsScreen = () => {
           <Image
             source={{ uri: item.profilePic }}
             style={styles.searchResultAvatar}
-          ></Image>
+          />
           <Text style={styles.searchResultText}>{item.name}</Text>
         </View>
         <TouchableOpacity
@@ -183,9 +148,11 @@ const FriendsScreen = () => {
 
   return (
     <LinearGradient colors={["#020024", "#090979"]} style={styles.container}>
-      {spotifyId && (
+      {user?.spotifyId && (
         <View style={styles.spotifyIdContainer}>
-          <Text style={styles.spotifyIdText}>Mon Spotify ID: {spotifyId}</Text>
+          <Text style={styles.spotifyIdText}>
+            Mon Spotify ID: {user.spotifyId}
+          </Text>
           <TouchableOpacity onPress={handleCopyId}>
             <Image
               source={require("@/assets/images/copy.png")}
@@ -231,9 +198,7 @@ const FriendsScreen = () => {
         duration={2000}
         action={{
           label: "OK",
-          onPress: () => {
-            // L’utilisateur ferme manuellement le snackbar, optionnel
-          },
+          onPress: () => {},
         }}
       >
         ID copié dans le presse-papiers !
@@ -286,7 +251,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 40,
   },
-
   spotifyIdContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -304,7 +268,6 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginBottom: 10,
   },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -330,7 +293,6 @@ const styles = StyleSheet.create({
     height: 30,
     tintColor: "#FFFFFF",
   },
-
   friendsContainer: {
     flex: 1,
     justifyContent: "center",
@@ -369,7 +331,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
   },
-
   modalContainer: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",

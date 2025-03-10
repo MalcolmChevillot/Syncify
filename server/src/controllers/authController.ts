@@ -48,9 +48,13 @@ export const exchangeCode: RequestHandler = async (
       });
     }
 
-    const token = jwt.sign({ spotifyId: user.spotifyId }, config.jwtSecret, {
-      expiresIn: "7d",
-    });
+    const token = jwt.sign(
+      { spotifyId: user.spotifyId, id: user.id },
+      config.jwtSecret,
+      {
+        expiresIn: "7d",
+      }
+    );
 
     // Tu peux aussi stocker le refresh_token en DB si besoin
     // await prisma.user.update({
