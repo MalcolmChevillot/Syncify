@@ -25,13 +25,40 @@ const friendsData = [
 const FriendsScreen = () => {
   const navigation = useNavigation();
   const { user, token } = useAuth();
-
+  const [friends, setFriends] = useState([]);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<
     Array<{ id: string; name: string; profilePic: string }>
   >([]);
+
+  useEffect(() => {
+    const fetchFriends = async () => {
+      if (!token) return;
+
+      try {
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/friend`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!response.ok) {
+          console.error("Failed to fetch friends");
+          return;
+        }
+        const data = await response.json();
+        setFriends(data);
+      } catch (error) {
+        console.error("Error fetching friends:", error);
+      }
+    };
+
+    fetchFriends();
+  }, [friends]);
 
   const addFriend = async (id: string) => {
     if (!token || !user) return;
@@ -76,12 +103,19 @@ const FriendsScreen = () => {
   const renderFriendItem = ({
     item,
   }: {
-    item: { id: string; name: string; points: number };
+    item: {
+      id: string;
+      displayName: string;
+      point: { points: number } | null;
+      profilePic: string;
+    };
   }) => (
     <View style={styles.friendCard}>
-      <View style={styles.friendAvatar} />
-      <Text style={styles.friendPoints}>{item.points} points</Text>
-      <Text style={styles.friendName}>{item.name}</Text>
+      <Image source={{ uri: item.profilePic }} style={styles.friendAvatar} />
+      <Text style={styles.friendPoints}>
+        {item.point ? item.point.points : 0} points
+      </Text>
+      <Text style={styles.friendName}>{item.displayName}</Text>
     </View>
   );
 
@@ -183,7 +217,7 @@ const FriendsScreen = () => {
 
       <View style={styles.friendsContainer}>
         <FlatList
-          data={friendsData}
+          data={friends}
           keyExtractor={(item) => item.id}
           horizontal
           contentContainerStyle={styles.friendsList}
@@ -315,7 +349,6 @@ const styles = StyleSheet.create({
   friendAvatar: {
     width: 50,
     height: 50,
-    backgroundColor: "#D9D9D9",
     borderRadius: 25,
     marginBottom: 10,
   },

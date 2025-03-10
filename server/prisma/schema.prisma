@@ -32,6 +32,8 @@ model Friend {
   status    String   @default("pending")
   createdAt DateTime @default(now())
 
+  point     Point?   @relation("FriendPoint", fields: [userId, friendId], references: [userId, friendId])
+
   @@unique([userId, friendId])
 }
 
@@ -62,6 +64,7 @@ model Point {
   user       User     @relation("PointsUser", fields: [userId], references: [id])
   userId     Int
   friend     User     @relation("UserPoints", fields: [friendId], references: [id])
+  friendPoint Friend? @relation("FriendPoint")
   friendId   Int
   points     Int      @default(0)
   lastUpdate DateTime @default(now())
