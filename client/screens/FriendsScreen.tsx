@@ -25,6 +25,7 @@ const friendsData = [
 const FriendsScreen = () => {
   const navigation = useNavigation();
   const [spotifyId, setSpotifyId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -52,7 +53,8 @@ const FriendsScreen = () => {
           return;
         }
         const data = await response.json();
-        if (data.user && data.user.spotifyId) {
+        if (data.user && data.user.spotifyId && data.user.id) {
+          setUserId(data.user.id);
           setSpotifyId(data.user.spotifyId);
         }
       } catch (error) {
@@ -62,6 +64,33 @@ const FriendsScreen = () => {
 
     fetchUser();
   }, []);
+
+  const addFriend = async (id: string) => {
+    const token = await SecureStore.getItemAsync("token");
+    if (!token) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/friend/add`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ userId: userId, friendId: id }),
+        }
+      );
+      console.log("response", response);
+      if (!response.ok) {
+        console.error("Failed to add friend");
+        return;
+      }
+      const data = await response.json();
+      console.log("Friend added:", data);
+    } catch (error) {
+      console.error("Error adding friend:", error);
+    }
+  };
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -118,7 +147,7 @@ const FriendsScreen = () => {
     const data = await response.json();
     setSearchResults([
       {
-        id: data.spotifyId,
+        id: data.id,
         name: data.displayName,
         profilePic: data.profilePic,
       },
@@ -132,11 +161,22 @@ const FriendsScreen = () => {
   }) => {
     return (
       <View style={styles.searchResultItem}>
-        <Image
-          source={{ uri: item.profilePic }}
-          style={styles.searchResultAvatar}
-        ></Image>
-        <Text style={styles.searchResultText}>{item.name}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Image
+            source={{ uri: item.profilePic }}
+            style={styles.searchResultAvatar}
+          ></Image>
+          <Text style={styles.searchResultText}>{item.name}</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.addFriendButton}
+          onPress={() => addFriend(item.id)}
+        >
+          <Image
+            source={require("@/assets/images/plus-friend.png")}
+            style={styles.addFriendImage}
+          />
+        </TouchableOpacity>
       </View>
     );
   };
@@ -361,6 +401,7 @@ const styles = StyleSheet.create({
   searchResultItem: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 8,
     borderBottomColor: "#444",
     borderBottomWidth: 1,
@@ -373,6 +414,20 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 10,
+  },
+  addFriendImage: {
+    width: 20,
+    height: 20,
+  },
+  addFriendButton: {
+    backgroundColor: "#00FF88",
+    borderRadius: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    width: 30,
+    height: 30,
   },
   noResults: {
     color: "#888",
