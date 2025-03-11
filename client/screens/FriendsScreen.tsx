@@ -13,20 +13,22 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
-import * as SecureStore from "expo-secure-store";
 import * as Clipboard from "expo-clipboard";
 import { Snackbar } from "react-native-paper";
-
-const friendsData = [
-  { id: "1", name: "Gandhi", points: 130 },
-  { id: "2", name: "John Doe", points: 70 },
-];
+import { useAuth } from "@/contexts/AuthContext";
 
 const FriendsScreen = () => {
   const navigation = useNavigation();
-  const [spotifyId, setSpotifyId] = useState<string | null>(null);
+  const { user, token } = useAuth();
+  const [friends, setFriends] = useState<
+    Array<{
+      id: string;
+      displayName: string;
+      point: { points: number } | null;
+      profilePic: string;
+    }>
+  >([]);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
-
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<
@@ -34,13 +36,12 @@ const FriendsScreen = () => {
   >([]);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const token = await SecureStore.getItemAsync("token");
+    const fetchFriends = async () => {
       if (!token) return;
 
       try {
         const response = await fetch(
-          `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/auth/me`,
+          `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/friend`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -48,28 +49,51 @@ const FriendsScreen = () => {
           }
         );
         if (!response.ok) {
-          console.error("Failed to fetch user data");
+          console.error("Failed to fetch friends");
           return;
         }
         const data = await response.json();
-        if (data.user && data.user.spotifyId) {
-          setSpotifyId(data.user.spotifyId);
-        }
+        setFriends(data);
       } catch (error) {
-        console.error("Error fetching user:", error);
+        console.error("Error fetching friends:", error);
       }
     };
 
-    fetchUser();
-  }, []);
+    fetchFriends();
+  }, [friends]);
+
+  const addFriend = async (id: string) => {
+    if (!token || !user) return;
+
+    try {
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/friend/add/${id}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("response", response);
+      if (!response.ok) {
+        console.error("Failed to add friend");
+        return;
+      }
+      const data = await response.json();
+      console.log("Friend added:", data);
+    } catch (error) {
+      console.error("Error adding friend:", error);
+    }
+  };
 
   const handleBackPress = () => {
     navigation.goBack();
   };
 
   const handleCopyId = async () => {
-    if (spotifyId) {
-      await Clipboard.setStringAsync(spotifyId);
+    if (user?.spotifyId) {
+      await Clipboard.setStringAsync(user.spotifyId);
       setSnackbarVisible(true);
     }
   };
@@ -81,12 +105,19 @@ const FriendsScreen = () => {
   const renderFriendItem = ({
     item,
   }: {
-    item: { id: string; name: string; points: number };
+    item: {
+      id: string;
+      displayName: string;
+      point: { points: number } | null;
+      profilePic: string;
+    };
   }) => (
     <View style={styles.friendCard}>
-      <View style={styles.friendAvatar} />
-      <Text style={styles.friendPoints}>{item.points} points</Text>
-      <Text style={styles.friendName}>{item.name}</Text>
+      <Image source={{ uri: item.profilePic }} style={styles.friendAvatar} />
+      <Text style={styles.friendPoints}>
+        {item.point ? item.point.points : 0} points
+      </Text>
+      <Text style={styles.friendName}>{item.displayName}</Text>
     </View>
   );
 
@@ -102,12 +133,11 @@ const FriendsScreen = () => {
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-
     const response = await fetch(
       `${process.env.EXPO_PUBLIC_LOCAL_IP}:3000/user/${query}`,
       {
         headers: {
-          Authorization: `Bearer ${await SecureStore.getItemAsync("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -118,7 +148,7 @@ const FriendsScreen = () => {
     const data = await response.json();
     setSearchResults([
       {
-        id: data.spotifyId,
+        id: data.id,
         name: data.displayName,
         profilePic: data.profilePic,
       },
@@ -132,20 +162,34 @@ const FriendsScreen = () => {
   }) => {
     return (
       <View style={styles.searchResultItem}>
-        <Image
-          source={{ uri: item.profilePic }}
-          style={styles.searchResultAvatar}
-        ></Image>
-        <Text style={styles.searchResultText}>{item.name}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Image
+            source={{ uri: item.profilePic }}
+            style={styles.searchResultAvatar}
+          />
+          <Text style={styles.searchResultText}>{item.name}</Text>
+        </View>
+        {friends.find((friend) => friend.id === item.id) ? (
+          <Text style={styles.searchResultText}>Déjà ami</Text>
+        ) : (
+          <TouchableOpacity onPress={() => addFriend(item.id)}>
+            <Image
+              source={require("@/assets/images/plus-friend.png")}
+              style={styles.addFriendImage}
+            />
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
 
   return (
     <LinearGradient colors={["#020024", "#090979"]} style={styles.container}>
-      {spotifyId && (
+      {user?.spotifyId && (
         <View style={styles.spotifyIdContainer}>
-          <Text style={styles.spotifyIdText}>Mon Spotify ID: {spotifyId}</Text>
+          <Text style={styles.spotifyIdText}>
+            Mon Spotify ID: {user.spotifyId}
+          </Text>
           <TouchableOpacity onPress={handleCopyId}>
             <Image
               source={require("@/assets/images/copy.png")}
@@ -176,7 +220,7 @@ const FriendsScreen = () => {
 
       <View style={styles.friendsContainer}>
         <FlatList
-          data={friendsData}
+          data={friends}
           keyExtractor={(item) => item.id}
           horizontal
           contentContainerStyle={styles.friendsList}
@@ -191,9 +235,7 @@ const FriendsScreen = () => {
         duration={2000}
         action={{
           label: "OK",
-          onPress: () => {
-            // L’utilisateur ferme manuellement le snackbar, optionnel
-          },
+          onPress: () => {},
         }}
       >
         ID copié dans le presse-papiers !
@@ -246,7 +288,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 40,
   },
-
   spotifyIdContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -264,7 +305,6 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginBottom: 10,
   },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -290,7 +330,6 @@ const styles = StyleSheet.create({
     height: 30,
     tintColor: "#FFFFFF",
   },
-
   friendsContainer: {
     flex: 1,
     justifyContent: "center",
@@ -313,7 +352,6 @@ const styles = StyleSheet.create({
   friendAvatar: {
     width: 50,
     height: 50,
-    backgroundColor: "#D9D9D9",
     borderRadius: 25,
     marginBottom: 10,
   },
@@ -329,7 +367,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
   },
-
   modalContainer: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -361,6 +398,7 @@ const styles = StyleSheet.create({
   searchResultItem: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 8,
     borderBottomColor: "#444",
     borderBottomWidth: 1,
@@ -373,6 +411,20 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 10,
+  },
+  addFriendImage: {
+    width: 20,
+    height: 20,
+  },
+  addFriendButton: {
+    backgroundColor: "#00FF88",
+    borderRadius: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    width: 30,
+    height: 30,
   },
   noResults: {
     color: "#888",

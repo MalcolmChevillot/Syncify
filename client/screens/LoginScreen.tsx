@@ -5,6 +5,7 @@ import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import * as SecureStore from "expo-secure-store";
 import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "@/contexts/AuthContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -18,7 +19,7 @@ const discovery = {
 
 const LoginScreen = () => {
   const navigation = useNavigation();
-  const [token, setToken] = React.useState<string | null>(null);
+  const { setAuthInfo } = useAuth();
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
       clientId: CLIENT_ID,
@@ -43,9 +44,11 @@ const LoginScreen = () => {
         .then((res) => res.json())
         .then((data) => {
           SecureStore.setItemAsync("token", data.token);
-          setToken(data.token);
+          SecureStore.setItemAsync("user", JSON.stringify(data.user));
+          setAuthInfo(data.token, data.user);
           navigation.navigate("Home" as never);
-        });
+        })
+        .catch((error) => console.error("Error exchanging code:", error));
     }
   }, [response]);
 

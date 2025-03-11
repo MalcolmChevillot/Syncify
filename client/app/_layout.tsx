@@ -12,6 +12,7 @@ import LoginScreen from "@/screens/LoginScreen";
 import SyncListScreen from "@/screens/SyncListScreen";
 import FriendsScreen from "@/screens/FriendsScreen";
 import * as SecureStore from "expo-secure-store";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const Stack = createStackNavigator();
 
@@ -64,31 +65,33 @@ const Layout = () => {
   }
 
   return (
-    <NavigationIndependentTree>
-      <NavigationContainer
-        onStateChange={(state) => {
-          const routeName = state
-            ? getActiveRouteName(state as NavigationState)
-            : "Home";
-          setCurrentRouteName(routeName);
-        }}
-      >
-        <View style={{ flex: 1, backgroundColor: "#020024" }}>
-          {currentRouteName !== "Login" && <Header />}
-          <Stack.Navigator
-            screenOptions={{
-              headerShown: false,
-            }}
-            initialRouteName={isAuthenticated ? "Home" : "Login"}
-          >
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="SyncList" component={SyncListScreen} />
-            <Stack.Screen name="Friends" component={FriendsScreen} />
-          </Stack.Navigator>
-        </View>
-      </NavigationContainer>
-    </NavigationIndependentTree>
+    <AuthProvider>
+      <NavigationIndependentTree>
+        <NavigationContainer
+          onStateChange={(state) => {
+            const routeName = state
+              ? getActiveRouteName(state as NavigationState)
+              : "Home";
+            setCurrentRouteName(routeName);
+          }}
+        >
+          <View style={{ flex: 1, backgroundColor: "#020024" }}>
+            {currentRouteName !== "Login" && <Header />}
+            <Stack.Navigator
+              screenOptions={{
+                headerShown: false,
+              }}
+              initialRouteName={isAuthenticated ? "Home" : "Login"}
+            >
+              <Stack.Screen name="Home" component={HomeScreen} />
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="SyncList" component={SyncListScreen} />
+              <Stack.Screen name="Friends" component={FriendsScreen} />
+            </Stack.Navigator>
+          </View>
+        </NavigationContainer>
+      </NavigationIndependentTree>
+    </AuthProvider>
   );
 };
 
