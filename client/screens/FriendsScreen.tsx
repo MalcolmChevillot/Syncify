@@ -15,17 +15,19 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import * as Clipboard from "expo-clipboard";
 import { Snackbar } from "react-native-paper";
-import { useAuth } from "@/contexts/AuthContext"; // Assurez-vous du chemin
-
-const friendsData = [
-  { id: "1", name: "Gandhi", points: 130 },
-  { id: "2", name: "John Doe", points: 70 },
-];
+import { useAuth } from "@/contexts/AuthContext";
 
 const FriendsScreen = () => {
   const navigation = useNavigation();
   const { user, token } = useAuth();
-  const [friends, setFriends] = useState([]);
+  const [friends, setFriends] = useState<
+    Array<{
+      id: string;
+      displayName: string;
+      point: { points: number } | null;
+      profilePic: string;
+    }>
+  >([]);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -167,15 +169,16 @@ const FriendsScreen = () => {
           />
           <Text style={styles.searchResultText}>{item.name}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.addFriendButton}
-          onPress={() => addFriend(item.id)}
-        >
-          <Image
-            source={require("@/assets/images/plus-friend.png")}
-            style={styles.addFriendImage}
-          />
-        </TouchableOpacity>
+        {friends.find((friend) => friend.id === item.id) ? (
+          <Text style={styles.searchResultText}>Déjà ami</Text>
+        ) : (
+          <TouchableOpacity onPress={() => addFriend(item.id)}>
+            <Image
+              source={require("@/assets/images/plus-friend.png")}
+              style={styles.addFriendImage}
+            />
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
