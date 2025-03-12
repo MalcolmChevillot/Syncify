@@ -18,18 +18,13 @@ import { useNavigation } from "@react-navigation/native";
 import * as Clipboard from "expo-clipboard";
 import { Snackbar } from "react-native-paper";
 import { useAuth } from "@/contexts/AuthContext";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "@/types/navigationTypes";
 
-interface FriendItemProps {
-  item: {
-    id: string;
-    displayName: string;
-    points: number;
-    profilePic: string;
-  };
-}
+type NavigationProps = StackNavigationProp<RootStackParamList, "FriendDetails">;
 
 const FriendsScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProps>();
   const { user, token } = useAuth();
   const [friends, setFriends] = useState<
     Array<{
@@ -119,7 +114,7 @@ const FriendsScreen = () => {
     points: number;
     profilePic: string;
   }) => {
-    navigation.navigate("FriendDetails" as never, { friend: item } as never);
+    navigation.navigate("FriendDetails", { friend: item });
   };
 
   const handleOpenModal = () => {

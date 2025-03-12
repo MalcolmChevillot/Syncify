@@ -14,8 +14,9 @@ import FriendsScreen from "@/screens/FriendsScreen";
 import FriendDetailsScreen from "@/screens/FriendScreen";
 import * as SecureStore from "expo-secure-store";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { RootStackParamList } from "@/types/navigationTypes";
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<RootStackParamList>();
 
 interface Route {
   name: string;
