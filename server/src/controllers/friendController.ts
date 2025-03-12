@@ -77,12 +77,26 @@ export const getFriends: RequestHandler = async (
       return;
     }
 
-    const friends = await prisma.friend.findMany({
+    const friendsRaw = await prisma.friend.findMany({
       where: {
-        userId: authUserId,
         status: "accepted",
+        OR: [{ userId: authUserId }, { friendId: authUserId }],
       },
       select: {
+        userId: true,
+        friendId: true,
+        user: {
+          select: {
+            id: true,
+            displayName: true,
+            profilePic: true,
+            points: {
+              select: {
+                points: true,
+              },
+            },
+          },
+        },
         friend: {
           select: {
             id: true,
@@ -98,11 +112,22 @@ export const getFriends: RequestHandler = async (
       },
     });
 
-    res.json(friends.map((f) => f.friend));
-    return;
+    const friends = friendsRaw.map((f) => {
+      const friendObj = f.userId === authUserId ? f.friend : f.user;
+      return {
+        id: friendObj.id,
+        displayName: friendObj.displayName,
+        profilePic: friendObj.profilePic,
+        points:
+          friendObj.points && friendObj.points.length > 0
+            ? friendObj.points[0].points
+            : 0,
+      };
+    });
+
+    res.json({ friends });
   } catch (error) {
     console.error("Error getting friends:", error);
     res.status(500).json({ error: "Internal Server Error" });
-    return;
   }
 };
