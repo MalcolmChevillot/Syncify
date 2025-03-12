@@ -10,12 +10,23 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
+  Pressable,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import * as Clipboard from "expo-clipboard";
 import { Snackbar } from "react-native-paper";
 import { useAuth } from "@/contexts/AuthContext";
+
+interface FriendItemProps {
+  item: {
+    id: string;
+    displayName: string;
+    points: number;
+    profilePic: string;
+  };
+}
 
 const FriendsScreen = () => {
   const navigation = useNavigation();
@@ -24,7 +35,7 @@ const FriendsScreen = () => {
     Array<{
       id: string;
       displayName: string;
-      point: { points: number } | null;
+      points: number;
       profilePic: string;
     }>
   >([]);
@@ -53,7 +64,7 @@ const FriendsScreen = () => {
           return;
         }
         const data = await response.json();
-        setFriends(data);
+        setFriends(data.friends);
       } catch (error) {
         console.error("Error fetching friends:", error);
       }
@@ -88,7 +99,7 @@ const FriendsScreen = () => {
   };
 
   const handleBackPress = () => {
-    navigation.goBack();
+    navigation.navigate("Home" as never);
   };
 
   const handleCopyId = async () => {
@@ -102,24 +113,14 @@ const FriendsScreen = () => {
     setSnackbarVisible(false);
   };
 
-  const renderFriendItem = ({
-    item,
-  }: {
-    item: {
-      id: string;
-      displayName: string;
-      point: { points: number } | null;
-      profilePic: string;
-    };
-  }) => (
-    <View style={styles.friendCard}>
-      <Image source={{ uri: item.profilePic }} style={styles.friendAvatar} />
-      <Text style={styles.friendPoints}>
-        {item.point ? item.point.points : 0} points
-      </Text>
-      <Text style={styles.friendName}>{item.displayName}</Text>
-    </View>
-  );
+  const handlePress = (item: {
+    id: string;
+    displayName: string;
+    points: number;
+    profilePic: string;
+  }) => {
+    navigation.navigate("FriendDetails" as never, { friend: item } as never);
+  };
 
   const handleOpenModal = () => {
     setIsModalVisible(true);
@@ -221,11 +222,31 @@ const FriendsScreen = () => {
       <View style={styles.friendsContainer}>
         <FlatList
           data={friends}
-          keyExtractor={(item) => item.id}
-          horizontal
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.friendCard}
+              onPress={() =>
+                handlePress({
+                  id: item.id,
+                  displayName: item.displayName,
+                  points: item.points,
+                  profilePic: item.profilePic,
+                })
+              }
+            >
+              <Image
+                source={{ uri: item.profilePic }}
+                style={styles.friendAvatar}
+              />
+              <View style={styles.friendInfo}>
+                <Text style={styles.friendName}>{item.displayName}</Text>
+                <Text style={styles.friendPoints}>{item.points} points</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.friendsList}
-          renderItem={renderFriendItem}
-          showsHorizontalScrollIndicator={false}
         />
       </View>
 
@@ -339,14 +360,15 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   friendCard: {
-    width: 100,
-    height: 150,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    padding: 10,
     borderWidth: 1,
     borderColor: "#FFFFFF",
     borderRadius: 8,
-    marginRight: 20,
-    justifyContent: "center",
-    alignItems: "center",
+    marginBottom: 10,
     backgroundColor: "transparent",
   },
   friendAvatar: {
@@ -355,17 +377,19 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginBottom: 10,
   },
+  friendInfo: {
+    flex: 1,
+    marginLeft: 10,
+  },
   friendPoints: {
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 5,
-    textAlign: "center",
   },
   friendName: {
     color: "#FFFFFF",
     fontSize: 14,
-    textAlign: "center",
   },
   modalContainer: {
     flex: 1,

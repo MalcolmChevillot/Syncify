@@ -11,6 +11,7 @@ import HomeScreen from "@/screens/HomeScreen";
 import LoginScreen from "@/screens/LoginScreen";
 import SyncListScreen from "@/screens/SyncListScreen";
 import FriendsScreen from "@/screens/FriendsScreen";
+import FriendDetailsScreen from "@/screens/FriendScreen";
 import * as SecureStore from "expo-secure-store";
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -87,6 +88,10 @@ const Layout = () => {
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="SyncList" component={SyncListScreen} />
               <Stack.Screen name="Friends" component={FriendsScreen} />
+              <Stack.Screen
+                name="FriendDetails"
+                component={FriendDetailsScreen}
+              />
             </Stack.Navigator>
           </View>
         </NavigationContainer>
